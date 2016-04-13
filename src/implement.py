@@ -1,22 +1,44 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+CNNsのモデルを実行するスクリプト
+今回使用するデータセットはMNIST
+"""
 
-from CNN import CNN
-from animeface import AnimeFaceDataset
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+from classification import CNN
 from chainer import cuda
+import numpy as np
+from sklearn.datasets import fetch_mldata
 
 #GPUつかうよ
 cuda.init(0)
 
-print 'load AnimeFace dataset'
-dataset = AnimeFaceDataset()
-dataset.read_data_target()
-data = dataset.data
-target = dataset.target
-n_outputs = dataset.get_n_types_target()
+print('load MNIST digit dataset')
+mnist = fetch_mldata('MNIST original', data_home=".")
+mnist.data = mnist.data.astype(np.float32)
+mnist.data /= 255
+mnist.target = mnist.target.astype(np.int32)
 
-cnn = CNN(data=data,
-          target=target,
+output_dim = 10
+
+print('create CNNs model')
+cnn = CNN(data=mnist.data,
+          target=mnist.target,
           gpu=0,
-          n_outputs=n_outputs)
+          output_dim=output_dim)
 
+print('training and test')
 cnn.train_and_test(n_epoch=100)
+
+print('end')
+
+#dataset = AnimeFaceDataset()
+#dataset.read_data_target()
+#data = dataset.data
+#target = dataset.target
+#n_outputs = dataset.get_n_types_target()
 
