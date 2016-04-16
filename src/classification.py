@@ -11,12 +11,13 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-from sklearn.datasets import fetch_mldata
+#from sklearn.datasets import fetch_mldata
+import six.moves.cPickle as pickle
 from sklearn.cross_validation import train_test_split
 import pylab
 import matplotlib.pyplot as plt
-import chainer
-import chainer.functions() as F
+#import chainer
+import chainer.functions as F
 from chainer import cuda, Variable, FunctionSet, optimizers
 import sys
 
@@ -25,12 +26,12 @@ class C2fc2(FunctionSet):
     def __init__(self, output_dim):
         super(C2fc2, self).__init__(
                 #Convolution2D(入力チャンネル数,出力チャンネル数,カーネルサイズ)
-                conv1 = F.Convolution2D(3, 32, 5),
-                conv2 = F.Convolution2D(32, 64, 5),
+                conv1 = F.Convolution2D(1, 32, 5, pad=2),
+                conv2 = F.Convolution2D(32, 64, 5, pad=2),
                 #Linear(入力次元,出力次元)
-                fc1 = F.Linear(512, 512)
+                fc1 = F.Linear(3136, 512),
                 fc2 = F.Linear(512, output_dim)
-        }
+        )
 
     def forward(self, x_data, y_data, train=True, gpu=-1):
         """NNのforward処理を行う関数"""
@@ -70,7 +71,11 @@ class CNN:
         self.x_test, \
         self.y_train, \
         self.y_test = train_test_split(data, target, test_size=0.1)
-        
+
+        #4次元のテンソルに変形-MNIST
+        self.x_train = self.x_train.reshape((len(self.x_train), 1, 28, 28))
+        self.x_test = self.x_test.reshape((len(self.x_test), 1, 28, 28))
+
         #学習用とテスト用のデータ数を保存
         self.n_train = len(self.y_train)
         self.n_test = len(self.y_test)
@@ -83,7 +88,7 @@ class CNN:
         #このmodelの関数がなにをしているのか確認する
         return self.model.predict(x_data, gpu)
 
-    def train_and_test(self, n_epoch=100, batchsize=10):
+    def train_and_test(self, n_epoch=100, batchsize=20):
             epoch = 1
             best_accuracy = 0
             while epoch <= n_epoch:
@@ -109,7 +114,22 @@ class CNN:
                     sum_train_loss += float(cuda.to_cpu(loss.data)) * real_batchsize
                     sum_train_accuracy += float(cuda.to_cpu(acc.data)) * real_batchsize
 
-                print('test mean loss={}, accuracy={}'.format(sum_train_loss/self.n_test, sum_train_accuracy/self.n_test))
+                print('train mean loss={}, accuracy={}'.format(sum_train_loss/self.n_train, sum_train_accuracy/self.n_train))
+                #evaluation
+                sum_test_accuracy = 0
+                sum_test_loss = 0
+                for i in range(0, self.n_test, batchsize):
+                    x_batch = self.x_test[i : i+batchsize]
+                    y_batch = self.y_test[i : i+batchsize]
+
+                    real_batchsize = len(x_batch)
+
+                    loss, acc = self.model.forward(x_batch, y_batch, train=False, gpu=self.gpu)
+
+                    sum_test_loss += float(cuda.to_cpu(loss.data)) * real_batchsize
+                    sum_test_accuracy += float(cuda.to_cpu(acc.data)) * real_batchsize
+
+                print('test mean loss={}, accuracy={}'.format(sum_test_loss/self.n_test, sum_test_accuracy/self.n_test))
                 epoch += 1
 
     def dump_model(self):

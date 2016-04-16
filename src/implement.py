@@ -36,9 +36,3 @@ cnn.train_and_test(n_epoch=100)
 
 print('end')
 
-#dataset = AnimeFaceDataset()
-#dataset.read_data_target()
-#data = dataset.data
-#target = dataset.target
-#n_outputs = dataset.get_n_types_target()
-
