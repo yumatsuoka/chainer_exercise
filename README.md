@@ -1,7 +1,7 @@
 #Exercise_Chainer:Classification with CNN
 ##Abstract
 classification with Convolutional Neural Networks using Chainer.  
-Dataset is MNIST and my original one.  
+Dataset is MNIST and my original one(Ikemen_check repository's one).  
 Fistly,I refer to <http://qiita.com/homulerdora/items/9a9af1481bf63470731a> .
 
 ##Requirements
