@@ -9,7 +9,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from classification import CNN
+from mnist_classification import CNN
 from chainer import cuda
 import numpy as np
 from sklearn.datasets import fetch_mldata
